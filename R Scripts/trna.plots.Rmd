@@ -1,0 +1,25 @@
+
+```{r}
+library(RColorBrewer)
+library(stringr)
+display.brewer.pal(n = 11, name = 'RdBu')
+colors <- brewer.pal(n = 11, name = "RdBu")
+```
+
+```{r some plots}
+data <- read.table("trna.fragments.norm.counts.xls", header=T, sep="\t", stringsAsFactors=F)
+iso = unique(data[,2])
+for (i in 1:length(iso)) {
+xx <- data[data[,2]==iso[i], ]
+file <- paste("fig.scatter/scatter.", iso[i], ".pdf", sep="")
+pdf(file, width=6, height=4, useDingbats = F)
+plot(xx[,8], xx[,9], col=colors[10], pch=19, xlab="Fragment start pposition in tRNA", ylab="log(norm counts)", main=iso[i], cex.main=1.6, xlim=c(-10, 80), ylim=c(0,12))
+points(xx[,8], xx[,10], col=colors[8], pch=19, type="h")
+points(xx[,8], xx[,11], col=colors[2], pch=19, type="h")
+points(xx[,8], xx[,12], col=colors[5], pch=19, type="h")
+legend("topright", col=c(colors[10], colors[8], colors[2], colors[5]), legend=c("D", "D_BH4", "NoD", "NoD_BH4"), pch=19, cex=0.8)
+dev.off()
+}
+
+
+```

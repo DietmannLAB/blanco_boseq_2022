@@ -1,0 +1,44 @@
+```{r}
+library(DESeq2)
+library(pals)
+colors <- coolwarm(11)
+```
+
+```{r differential expression analysis}
+data <- read.table("data/trna.fragments.dat", header=T, sep="\t", stringsAsFactors=F)
+
+counts <- data[, 9:ncol(data)]
+rowsum <- rowSums(counts)
+
+# remove fragments with less than 10 counts over all samples
+data <- data[rowsum> 9,]
+counts <- counts[rowsum> 9,]
+nrow(data)
+
+conds <- factor(c("no_BH4", "BH4", "no_BH4", "BH4"))
+        
+
+pData <- DataFrame(condition=conds)
+dd <- DESeqDataSetFromMatrix(countData = counts, pData, design = ~ condition)
+dd <- DESeq(dd)
+set <- counts(dd, normalized=T)
+
+for (i in 1:ncol(set)) {
+    set[,i] <- set[,i] + 1
+}
+
+set <- log2(set)
+
+res  <- results(dd, contrast=c("condition","BH4","no_BH4"))
+res[is.na(res$padj), ]$padj <- 1
+res[is.na(res$log2FoldChange), ]$log2FoldChange <- 0
+BH4.vs.no_BH4 <- res
+
+pdf("BH4.vs.no_BH4.fragments.histogram.pdf", width=5, height=4)
+hist(BH4.vs.no_BH4$log2FoldChange, col=colors[3], breaks=50, xlab="BH4.vs.no_BH4 log2FC", main="", cex.lab=1.2)
+dev.off()
+
+stable <- data.frame(data[,1:6], set, BH4.vs.no_BH4$log2FoldChange, BH4.vs.no_BH4$pvalue, BH4.vs.no_BH4$padj)
+write.table(stable, file="trna.fragments.norm.counts.xls", sep="\t", row.names=F, quote=F)
+```
+
